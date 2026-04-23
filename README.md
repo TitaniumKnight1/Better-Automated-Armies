@@ -8,7 +8,7 @@ A **Crusader Kings III** mod (1.19 / Crane) that improves how **army commanders*
 
 ## What it does today (Stage 1)
 
-After armies exist, on each ruler’s **`on_army_monthly`** pulse (~30 days per army), the mod runs for the **primary war attacker** when they are at war and:
+After armies exist, on each ruler’s **`on_army_monthly`** pulse (~30 days per army), the mod runs when they are **at war on the attacker side** (primary attacker, co-attacker, or attacker-side ally) and:
 
 - Collects **unique commanders** from that ruler’s **raised armies** (`every_army` → `army_commander`).
 - **Skips** anyone with the character flag **`baa_role_override`** (reserved for a future manual-override path; the flag is never written in Stage 1).
@@ -23,7 +23,7 @@ Trait keys and hooks follow validated patterns documented in [`research/commande
 
 | Stage | Focus |
 |-------|--------|
-| **1** (current) | `on_army_monthly` hook (primary attacker), scripted effects/triggers, `baa_role` / flags, localization, GitHub docs |
+| **1** (current) | `on_army_monthly` hook (attacker-side wars), scripted effects/triggers, `baa_role` / flags, localization, GitHub docs |
 | **2** | Strategy tick / army movement / deployment events (out of scope for Stage 1) |
 | **3** | Character interaction UI and writing **`baa_role_override`** (out of scope for Stage 1) |
 
@@ -84,7 +84,7 @@ The Paradox launcher discovers mods from **`.mod` files** in your user **CK3 `mo
 |------|---------|
 | `Better Automated Armies.mod` | **Launcher stub** — must live in `Documents\...\Crusader Kings III\mod\` next to the mod folder; points at the mod via `path=` |
 | `descriptor.mod` | Mod metadata read from the **mod content folder** |
-| `common/on_action/baa_war_on_actions.txt` | `on_army_monthly` → role assignment on army owner (primary attacker, at war) |
+| `common/on_action/baa_war_on_actions.txt` | `on_army_monthly` → role assignment on army owner (attacker-side participant, at war) |
 | `common/scripted_effects/baa_role_assignment_effects.txt` | `baa_assign_all_roles_effect`, `baa_score_and_assign_role_effect` |
 | `common/scripted_triggers/baa_role_triggers.txt` | Trait/stat triggers for scoring |
 | `localization/english/baa_l_english.yml` | English role names (UTF-8 BOM) |
