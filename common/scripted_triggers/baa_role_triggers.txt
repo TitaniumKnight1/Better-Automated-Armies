@@ -1,0 +1,36 @@
+# Better Automated Armies — scripted triggers for commander role scoring (character scope).
+# Trait keys verified against vanilla common/traits/00_traits.txt (Crane / 1.19).
+
+baa_trait_field_priority_trigger = {
+	OR = {
+		has_trait = aggressive_attacker
+		AND = {
+			has_trait = brave
+			martial >= 14
+		}
+	}
+}
+
+baa_trait_siege_priority_trigger = {
+	OR = {
+		has_trait = patient
+		AND = {
+			stewardship >= 12
+			has_trait = strategist
+		}
+	}
+}
+
+baa_trait_raider_priority_trigger = {
+	OR = {
+		has_trait = schemer
+		has_trait = craven
+	}
+}
+
+baa_trait_reserve_priority_trigger = {
+	OR = {
+		martial < 10
+		has_trait = humble
+	}
+}

@@ -1,0 +1,16 @@
+# Better Automated Armies — war hooks (Stage 1).
+# Appends via merged on_actions; uses scope:attacker explicitly (on_war_started matches CB on_declaration scopes).
+
+on_war_started = {
+	on_actions = {
+		baa_on_war_started_role_assignment
+	}
+}
+
+baa_on_war_started_role_assignment = {
+	effect = {
+		scope:attacker = {
+			baa_assign_all_roles_effect = yes
+		}
+	}
+}
