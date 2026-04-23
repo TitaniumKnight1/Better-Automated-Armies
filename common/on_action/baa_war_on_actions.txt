@@ -1,16 +1,30 @@
-# Better Automated Armies — war hooks (Stage 1).
-# Appends via merged on_actions; uses scope:attacker explicitly (on_war_started matches CB on_declaration scopes).
+# Better Automated Armies — army hooks (Stage 1).
+#
+# on_army_monthly (vanilla army_on_actions.txt, header before the block):
+#   root = owner of the army
+#   scope:army = the army
+#
+# Role assignment runs on the army owner when they are at war as a primary attacker.
+# Idempotency lives in baa_assign_all_roles_effect (baa_role_assigned + commander lists).
 
-on_war_started = {
+on_army_monthly = {
 	on_actions = {
-		baa_on_war_started_role_assignment
+		baa_on_army_monthly_role_assignment
 	}
 }
 
-baa_on_war_started_role_assignment = {
+baa_on_army_monthly_role_assignment = {
 	effect = {
-		scope:attacker = {
-			baa_assign_all_roles_effect = yes
+		root = {
+			if = {
+				limit = {
+					is_at_war = yes
+					any_character_war = {
+						primary_attacker = root
+					}
+				}
+				baa_assign_all_roles_effect = yes
+			}
 		}
 	}
 }

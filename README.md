@@ -1,6 +1,6 @@
 # Better Automated Armies
 
-A **Crusader Kings III** mod (1.19 / Crane) that improves how **army commanders** are used in war by assigning them **operational roles** when a war begins, so later stages of the mod can drive automation and missions without ad hoc guessing.
+A **Crusader Kings III** mod (1.19 / Crane) that improves how **army commanders** are used in war by assigning them **operational roles** once armies are raised (first pass on the **`on_army_monthly`** pulse), so later stages of the mod can drive automation and missions without ad hoc guessing.
 
 **Status:** Early development — **Stage 1** (role scaffolding) is implemented; strategy ticks, movement, deployment UI, and manual overrides are planned for later stages.
 
@@ -8,7 +8,7 @@ A **Crusader Kings III** mod (1.19 / Crane) that improves how **army commanders*
 
 ## What it does today (Stage 1)
 
-When the **primary attacker’s** war starts (`on_war_started`), the mod:
+After armies exist, on each ruler’s **`on_army_monthly`** pulse (~30 days per army), the mod runs for the **primary war attacker** when they are at war and:
 
 - Collects **unique commanders** from that ruler’s **raised armies** (`every_army` → `army_commander`).
 - **Skips** anyone with the character flag **`baa_role_override`** (reserved for a future manual-override path; the flag is never written in Stage 1).
@@ -23,7 +23,7 @@ Trait keys and hooks follow validated patterns documented in [`research/commande
 
 | Stage | Focus |
 |-------|--------|
-| **1** (current) | `on_war_started` hook, scripted effects/triggers, `baa_role` / flags, localization, GitHub docs |
+| **1** (current) | `on_army_monthly` hook (primary attacker), scripted effects/triggers, `baa_role` / flags, localization, GitHub docs |
 | **2** | Strategy tick / army movement / deployment events (out of scope for Stage 1) |
 | **3** | Character interaction UI and writing **`baa_role_override`** (out of scope for Stage 1) |
 
@@ -84,7 +84,7 @@ The Paradox launcher discovers mods from **`.mod` files** in your user **CK3 `mo
 |------|---------|
 | `Better Automated Armies.mod` | **Launcher stub** — must live in `Documents\...\Crusader Kings III\mod\` next to the mod folder; points at the mod via `path=` |
 | `descriptor.mod` | Mod metadata read from the **mod content folder** |
-| `common/on_action/baa_war_on_actions.txt` | `on_war_started` → role assignment pass |
+| `common/on_action/baa_war_on_actions.txt` | `on_army_monthly` → role assignment on army owner (primary attacker, at war) |
 | `common/scripted_effects/baa_role_assignment_effects.txt` | `baa_assign_all_roles_effect`, `baa_score_and_assign_role_effect` |
 | `common/scripted_triggers/baa_role_triggers.txt` | Trait/stat triggers for scoring |
 | `localization/english/baa_l_english.yml` | English role names (UTF-8 BOM) |

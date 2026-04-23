@@ -1,177 +1,221 @@
 # Better Automated Armies — commander role assignment (Stage 1).
-# Invoked from scope:attacker (primary war initiator). Requires scope:war from on_war_started.
+# Invoked from army owner (root) via on_army_monthly — not from on_war_started.
+#
+# scope:war for the martial fallback counter is saved once per run from root’s wars:
+# random_character_war { primary_attacker = root } → save_scope_as = war (see fallback block).
+# Stage 2 can reuse this pattern when extending on_army_monthly.
 #
 # Fallback martial ordering (3+ commanders, step 5): uses ordered_in_list + order_by = martial on a
 # character list — not a direct pairwise stat compare. Characters with equal martial sort in an
 # engine-defined order; Stage 2 should not assume a stable tiebreak beyond that.
 
 baa_assign_all_roles_effect = {
-	# Reset working lists (safe if empty).
-	every_in_list = {
-		list = baa_commanders
-		remove_from_list = baa_commanders
-	}
-	every_in_list = {
-		list = baa_needs_fallback
-		remove_from_list = baa_needs_fallback
-	}
-
-	# Collect unique army commanders for the attacker; skip manual overrides entirely.
-	every_army = {
-		limit = {
-			exists = army_commander
-		}
-		army_commander = {
-			if = {
-				limit = {
-					NOT = { has_character_flag = baa_role_override }
-					NOT = { is_in_list = baa_commanders }
-				}
-				add_to_list = baa_commanders
-			}
-		}
-	}
-
 	if = {
 		limit = {
-			list_size:baa_commanders > 0
+			any_character_war = {
+				primary_attacker = root
+			}
 		}
-		if = {
+		random_character_war = {
 			limit = {
-				list_size:baa_commanders >= 1
-				list_size:baa_commanders < 2
+				primary_attacker = root
 			}
-			every_in_list = {
-				list = baa_commanders
-				remove_variable = baa_role
-				remove_character_flag = baa_role_assigned
-			}
-			every_in_list = {
-				list = baa_commanders
-				set_variable = {
-					name = baa_role
-					value = flag:field
-				}
-				add_character_flag = baa_role_assigned
-			}
+			save_scope_as = war
 		}
-		else_if = {
+
+		# Reset working lists (safe if empty).
+		every_in_list = {
+			list = baa_commanders_pool
+			remove_from_list = baa_commanders_pool
+		}
+		every_in_list = {
+			list = baa_commanders
+			remove_from_list = baa_commanders
+		}
+		every_in_list = {
+			list = baa_needs_fallback
+			remove_from_list = baa_needs_fallback
+		}
+
+		# baa_commanders_pool = all unique army commanders (non-override); used only for 1v2 edge-case counts.
+		# baa_commanders = commanders still needing a role this war (skips baa_role_assigned — idempotent across monthly pulses).
+		every_army = {
 			limit = {
-				list_size:baa_commanders >= 2
-				list_size:baa_commanders < 3
+				exists = army_commander
 			}
-			every_in_list = {
-				list = baa_commanders
-				remove_variable = baa_role
-				remove_character_flag = baa_role_assigned
-			}
-			# Highest martial → field; other → siege (no raider/reserve scoring for two-commander wars).
-			ordered_in_list = {
-				list = baa_commanders
-				order_by = martial
-				position = 0
-				check_range_bounds = no
-				save_scope_as = baa_top_martial
-			}
-			scope:baa_top_martial = {
-				set_variable = {
-					name = baa_role
-					value = flag:field
-				}
-				add_character_flag = baa_role_assigned
-			}
-			every_in_list = {
-				list = baa_commanders
-				limit = {
-					NOT = {
-						this = scope:baa_top_martial
-					}
-				}
-				set_variable = {
-					name = baa_role
-					value = flag:siege
-				}
-				add_character_flag = baa_role_assigned
-			}
-		}
-		else = {
-			# Three or more commanders: trait/stat pass, then martial-ordered fallback for leftovers.
-			every_in_list = {
-				list = baa_commanders
-				remove_variable = baa_role
-				remove_character_flag = baa_role_assigned
-			}
-			every_in_list = {
-				list = baa_commanders
-				baa_score_and_assign_role_effect = yes
-			}
-
-			every_in_list = {
-				list = baa_needs_fallback
-				remove_from_list = baa_needs_fallback
-			}
-			every_in_list = {
-				list = baa_commanders
-				limit = {
-					NOT = {
-						has_character_flag = baa_role_assigned
-					}
-				}
-				add_to_list = baa_needs_fallback
-			}
-
-			if = {
-				limit = {
-					list_size:baa_needs_fallback > 0
-				}
-				scope:war = {
-					set_variable = {
-						name = baa_fb_i
-						value = 0
-					}
-				}
-				# Stage 2 note: tiebreak on equal martial is whatever ordered_in_list returns for same order_by.
-				ordered_in_list = {
-					list = baa_needs_fallback
-					order_by = martial
-					max = 99
-					check_range_bounds = no
-					scope:war = {
-						change_variable = {
-							name = baa_fb_i
-							add = 1
+			army_commander = {
+				if = {
+					limit = {
+						NOT = {
+							has_character_flag = baa_role_override
 						}
 					}
 					if = {
 						limit = {
-							scope:war.var:baa_fb_i = 1
+							NOT = {
+								is_in_list = baa_commanders_pool
+							}
 						}
-						set_variable = {
-							name = baa_role
-							value = flag:field
-						}
-						add_character_flag = baa_role_assigned
+						add_to_list = baa_commanders_pool
 					}
-					else_if = {
+					if = {
 						limit = {
-							scope:war.var:baa_fb_i = 2
+							NOT = {
+								has_character_flag = baa_role_assigned
+							}
+							NOT = {
+								is_in_list = baa_commanders
+							}
 						}
-						set_variable = {
-							name = baa_role
-							value = flag:siege
-						}
-						add_character_flag = baa_role_assigned
-					}
-					else = {
-						set_variable = {
-							name = baa_role
-							value = flag:reserve
-						}
-						add_character_flag = baa_role_assigned
+						add_to_list = baa_commanders
 					}
 				}
-				scope:war = {
-					remove_variable = baa_fb_i
+			}
+		}
+
+		# Nothing left to assign (every commander already has a role, or no eligible commanders).
+		if = {
+			limit = {
+				list_size:baa_commanders > 0
+			}
+			# Edge-case branches only when the full commander set is still unassigned (first monthly pass).
+			if = {
+				limit = {
+					list_size:baa_commanders_pool = 1
+					list_size:baa_commanders = 1
+				}
+				every_in_list = {
+					list = baa_commanders
+					remove_variable = baa_role
+					remove_character_flag = baa_role_assigned
+				}
+				every_in_list = {
+					list = baa_commanders
+					set_variable = {
+						name = baa_role
+						value = flag:field
+					}
+					add_character_flag = baa_role_assigned
+				}
+			}
+			else_if = {
+				limit = {
+					list_size:baa_commanders_pool = 2
+					list_size:baa_commanders = 2
+				}
+				every_in_list = {
+					list = baa_commanders
+					remove_variable = baa_role
+					remove_character_flag = baa_role_assigned
+				}
+				# Highest martial → field; other → siege (no raider/reserve scoring for two-commander wars).
+				ordered_in_list = {
+					list = baa_commanders
+					order_by = martial
+					position = 0
+					check_range_bounds = no
+					save_scope_as = baa_top_martial
+				}
+				scope:baa_top_martial = {
+					set_variable = {
+						name = baa_role
+						value = flag:field
+					}
+					add_character_flag = baa_role_assigned
+				}
+				every_in_list = {
+					list = baa_commanders
+					limit = {
+						NOT = {
+							this = scope:baa_top_martial
+						}
+					}
+					set_variable = {
+						name = baa_role
+						value = flag:siege
+					}
+					add_character_flag = baa_role_assigned
+				}
+			}
+			else = {
+				# Three or more pool commanders, and/or partial reassignment: trait/stat pass on unassigned only, then fallback.
+				every_in_list = {
+					list = baa_commanders
+					remove_variable = baa_role
+					remove_character_flag = baa_role_assigned
+				}
+				every_in_list = {
+					list = baa_commanders
+					baa_score_and_assign_role_effect = yes
+				}
+
+				every_in_list = {
+					list = baa_needs_fallback
+					remove_from_list = baa_needs_fallback
+				}
+				every_in_list = {
+					list = baa_commanders
+					limit = {
+						NOT = {
+							has_character_flag = baa_role_assigned
+						}
+					}
+					add_to_list = baa_needs_fallback
+				}
+
+				if = {
+					limit = {
+						list_size:baa_needs_fallback > 0
+					}
+					scope:war = {
+						set_variable = {
+							name = baa_fb_i
+							value = 0
+						}
+					}
+					# Stage 2 note: tiebreak on equal martial is whatever ordered_in_list returns for same order_by.
+					ordered_in_list = {
+						list = baa_needs_fallback
+						order_by = martial
+						max = 99
+						check_range_bounds = no
+						scope:war = {
+							change_variable = {
+								name = baa_fb_i
+								add = 1
+							}
+						}
+						if = {
+							limit = {
+								scope:war.var:baa_fb_i = 1
+							}
+							set_variable = {
+								name = baa_role
+								value = flag:field
+							}
+							add_character_flag = baa_role_assigned
+						}
+						else_if = {
+							limit = {
+								scope:war.var:baa_fb_i = 2
+							}
+							set_variable = {
+								name = baa_role
+								value = flag:siege
+							}
+							add_character_flag = baa_role_assigned
+						}
+						else = {
+							set_variable = {
+								name = baa_role
+								value = flag:reserve
+							}
+							add_character_flag = baa_role_assigned
+						}
+					}
+					scope:war = {
+						remove_variable = baa_fb_i
+					}
 				}
 			}
 		}
