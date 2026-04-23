@@ -40,18 +40,41 @@ Non-goals for the public roadmap as stated in design docs: allied AI iteration (
 
 ## Installation
 
-1. Clone this repository (or download a release archive when available).
-2. Place the mod where the CK3 launcher looks for mods, for example:
-   - **Windows:** `Documents\Paradox Interactive\Crusader Kings III\mod\`
-3. Either **copy** the folder or create a **directory junction / symlink** so the folder name in `mod\` contains `descriptor.mod` at its root. Example junction (run in `cmd`):
+The Paradox launcher discovers mods from **`.mod` files** in your user **CK3 `mod` folder**, each paired with a **folder** that holds `descriptor.mod` and the rest of the mod. See the [official modding article](https://productionwiki-ck3.paradoxwikis.com/Modding) (“Every mod in it must have a .mod file and a folder”).
+
+### Windows (typical)
+
+1. Open your CK3 mod directory (default):
+   - `Documents\Paradox Interactive\Crusader Kings III\mod\`
+2. Ensure you have **both** of the following next to each other:
+   - **`Better Automated Armies.mod`** — launcher entry (included at the **repository root**; **copy** that file into the `mod\` folder above, not inside the `Better Automated Armies\` subfolder).
+   - **`Better Automated Armies\`** — mod content folder whose root contains **`descriptor.mod`**, `common\`, `localization\`, etc.
+
+   The included `.mod` file uses a **portable** path:
+
+   ```txt
+   path="mod/Better Automated Armies"
+   ```
+
+   That path is relative to your Crusader Kings III user directory (`Documents\Paradox Interactive\Crusader Kings III\`), so it resolves to `mod\Better Automated Armies` under that folder. If you move the mod folder elsewhere, edit `path=` in the `.mod` file to an **absolute** path (forward slashes work), per the wiki.
+
+3. **Development layout:** you can keep the project in another drive or folder and use a **directory junction** so the launcher still sees `mod\Better Automated Armies\` with `descriptor.mod` inside. Example (run in `cmd`):
 
    ```bat
    mklink /J "%USERPROFILE%\Documents\Paradox Interactive\Crusader Kings III\mod\Better Automated Armies" "C:\VSCode\Better Automated Armies"
    ```
 
+   You still need **`Better Automated Armies.mod`** sitting in `mod\` (sibling to that folder), not only the junction.
+
    *True symbolic links* on Windows may require Developer Mode or an elevated shell; a **junction** is usually enough for local development.
 
-4. Start the CK3 launcher → **Mods** → enable **Better Automated Armies** → launch with a **1.19** compatible game version.
+4. Restart the **Paradox launcher** if it was already open, then enable **Better Automated Armies** under **Mods** and launch a **1.19**-compatible game version.
+
+### If the mod still does not appear
+
+- Confirm the `.mod` filename ends in **`.mod`** and lives in **`...\Crusader Kings III\mod\`**, not inside `Better Automated Armies\`.
+- If your **Documents** folder is redirected (e.g. OneDrive), use the actual resolved path for junctions and for troubleshooting.
+- As a last resort, Paradox forum threads suggest clearing launcher cache (`launcher-v2.sqlite` / `mods_registry.json` under the same CK3 user folder) after fixing paths — back up first if you care about other local mod metadata.
 
 ---
 
@@ -59,7 +82,8 @@ Non-goals for the public roadmap as stated in design docs: allied AI iteration (
 
 | Path | Purpose |
 |------|---------|
-| `descriptor.mod` | Mod metadata for the launcher |
+| `Better Automated Armies.mod` | **Launcher stub** — must live in `Documents\...\Crusader Kings III\mod\` next to the mod folder; points at the mod via `path=` |
+| `descriptor.mod` | Mod metadata read from the **mod content folder** |
 | `common/on_action/baa_war_on_actions.txt` | `on_war_started` → role assignment pass |
 | `common/scripted_effects/baa_role_assignment_effects.txt` | `baa_assign_all_roles_effect`, `baa_score_and_assign_role_effect` |
 | `common/scripted_triggers/baa_role_triggers.txt` | Trait/stat triggers for scoring |
