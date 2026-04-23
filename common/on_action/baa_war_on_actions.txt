@@ -4,7 +4,8 @@
 #   root = owner of the army
 #   scope:army = the army
 #
-# Role assignment runs on the army owner when they are at war as a primary attacker.
+# Role assignment runs on the army owner when they are at war on the attacker side (primary attacker,
+# co-attacker, or attacker-side ally — not defender-side).
 # Idempotency lives in baa_assign_all_roles_effect (baa_role_assigned + commander lists).
 #
 # Stage 2: add strategy tick logic inside baa_on_army_monthly_role_assignment BELOW
@@ -24,9 +25,10 @@ baa_on_army_monthly_role_assignment = {
 		root = {
 			if = {
 				limit = {
+					# Cheap filter first; then war-scoped check (vanilla: war_on_actions on_join_war_as_secondary uses scope:war = { is_attacker = root }).
 					is_at_war = yes
 					any_character_war = {
-						primary_attacker = root
+						is_attacker = root
 					}
 				}
 				baa_assign_all_roles_effect = yes

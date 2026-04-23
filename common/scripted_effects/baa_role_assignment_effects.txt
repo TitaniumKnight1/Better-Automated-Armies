@@ -2,9 +2,10 @@
 # Invoked from army owner (root) via on_army_monthly — not from on_war_started.
 #
 # scope:war for the martial fallback counter is saved once per run from root’s wars:
-# random_character_war { primary_attacker = root } → save_scope_as = war (see fallback block).
-# Known V1 limitation: if root is primary attacker in TWO+ wars at once, random_character_war picks ONE
-# arbitrary war — no script error; every_army/commander work is still correct, but scope:war is ambiguous.
+# random_character_war { limit = { is_attacker = root } } → save_scope_as = war (see fallback block).
+# Same filter as any_character_war / on_action guard (war scope: is_attacker = root — jesec Triggers_list + vanilla war_on_actions).
+# Known V1 limitation: if root is an attacker-side participant in TWO+ wars at once, random_character_war picks ONE
+# arbitrary matching war — no script error; every_army/commander work is still correct, but scope:war is ambiguous.
 # Documented in research/commander_mission_system_research.md for triage when players report “wrong war.”
 # Stage 2 can reuse or replace this pattern when extending on_army_monthly.
 #
@@ -16,12 +17,12 @@ baa_assign_all_roles_effect = {
 	if = {
 		limit = {
 			any_character_war = {
-				primary_attacker = root
+				is_attacker = root
 			}
 		}
 		random_character_war = {
 			limit = {
-				primary_attacker = root
+				is_attacker = root
 			}
 			save_scope_as = war
 		}
