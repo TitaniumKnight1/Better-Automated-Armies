@@ -6,6 +6,26 @@
 
 ---
 
+## Better Automated Armies mod — Stage 1 notes (post-research)
+
+### V1 — `random_character_war` when primary attacker in multiple wars
+
+**Context:** Stage 1 role assignment runs from `on_army_monthly` on the army owner (`root`). To recover a `scope:war` for the martial-fallback counter (and to mirror pre-`on_war_started` assumptions), the mod uses `random_character_war` with `primary_attacker = root` and `save_scope_as = war`.
+
+**Limitation:** If `root` is the **primary attacker in more than one simultaneous war**, the engine returns **one** of those wars (selection is not player-facing and should be treated as arbitrary for V1).
+
+**Impact:** **No script failure.** Commander discovery uses `every_army` / `army_commander` on the character; it is not `scope:war`-filtered. The ambiguous `scope:war` mainly affects where the temporary fallback counter variable (`baa_fb_i`) is stored and any future logic that mistakenly assumes `scope:war` is “the” war for all purposes.
+
+**Triage:** Reports of “wrong war” while dual-attacking are this known limitation until V2 selects a war deterministically (e.g. war start date, army-linked war, or explicit player scope).
+
+### Stage 2 — shared `on_army_monthly` with Stage 1
+
+**Plan:** Keep a single `baa_on_army_monthly_role_assignment` under `on_army_monthly`. Stage 2 appends tick / strategy effects **after** `baa_assign_all_roles_effect` in that block.
+
+**Ordering:** Assignment executes first in the chain and applies `baa_role_assigned` where appropriate. Stage 2 tick logic should require stable role flags (and its own state) so the first post-raise pulse assigns roles and subsequent pulses (~30 days, staggered by army ID) handle ticks without racing assignment.
+
+---
+
 ## High-Risk Items First (Q4 / Q9)
 
 ### Recurring war tick (Q4) — summary

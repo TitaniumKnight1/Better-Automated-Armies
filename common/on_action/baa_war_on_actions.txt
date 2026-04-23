@@ -6,6 +6,12 @@
 #
 # Role assignment runs on the army owner when they are at war as a primary attacker.
 # Idempotency lives in baa_assign_all_roles_effect (baa_role_assigned + commander lists).
+#
+# Stage 2: add strategy tick logic inside baa_on_army_monthly_role_assignment BELOW
+# baa_assign_all_roles_effect = yes. Same pulse order is safe: assignment runs first and sets
+# baa_role_assigned; tick code should gate on that (and Stage 2 vars). Army-monthly is ~30 days
+# and staggered by army ID, so a stack that just gained commanders typically gets roles on this
+# pulse and tick-relevant behavior on a later pulse once flags/state are stable.
 
 on_army_monthly = {
 	on_actions = {
